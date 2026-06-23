@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosphere Pro - Advanced Carbon Intelligence Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f0c;
+            --card-bg: #141b16;
+            --card-border: rgba(255, 255, 255, 0.05);
+            --primary: #4ade80;
+            --primary-glow: rgba(74, 222, 128, 0.25);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --healthy-eco: #22c55e;
+            --warning-eco: #eab308;
+            --danger-eco: #ef4444;
+            --nav-height: 60px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-top: calc(var(--nav-height) + 20px);
+        }
+
+        /* --- NAVIGATION BAR --- */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background-color: rgba(20, 27, 22, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            z-index: 1000;
+        }
+
+        nav .logo {
+            font-weight: 800;
+            color: var(--primary);
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        nav .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* --- MAIN DASHBOARD LAYOUT --- */
+        .dashboard-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1.2fr 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border-left: 4px solid var(--primary);
+            padding-left: 0.6rem;
+        }
+
+        /* --- PRESET CASE STUDIO SELECTOR --- */
+        .case-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 600px) {
+            .case-selector-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .case-btn {
+            background: #1c2620;
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-main);
+            padding: 0.6rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .case-btn:hover {
+            border-color: var(--primary);
+            background: rgba(74, 222, 128, 0.05);
+        }
+
+        .case-btn.active {
+            background: var(--primary);
+            color: #0b0f0c;
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        /* --- CONFIGURATION ELEMENTS --- */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .input-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: -0.3rem;
+            margin-bottom: 0.6rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #253029;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--primary-glow);
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        .range-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.4rem;
+        }
+
+        .range-value {
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(74, 222, 128, 0.08);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .select-custom {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #0b0f0c;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-main);
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+
+        /* --- THE ANIMATED ECOSPHERE GRAPHIC --- */
+        .visualizer-pane {
+            align-items: center;
+            text-align: center;
+        }
+
+        .sphere-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 1.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ecosphere {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--healthy-eco);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: float 5s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: rise infinite linear;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(260px) scale(0); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-10px) scale(1); opacity: 0; }
+        }
+
+        .score-num {
+            font-size: 3.8rem;
+            font-weight: 800;
+            color: var(--healthy-eco);
+            line-height: 1;
+        }
+
+        .score-unit {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 0.3rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin: 1rem 0;
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-btn {
+            background-color: var(--primary);
+            color: #0b0f0c;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+            transition: transform 0.2s, opacity 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.02);
+            opacity: 0.95;
+        }
+
+        /* --- GAMIFIED ACHIEVEMENT SYSTEM --- */
+        .badges-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .badge-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #253029;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            border: 2px solid rgba(255,255,255,0.05);
+            filter: grayscale(100%);
+            opacity: 0.3;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .badge-icon.unlocked {
+            filter: grayscale(0%);
+            opacity: 1;
+            border-color: var(--primary);
+            background: rgba(74, 222, 128, 0.1);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .badge-icon::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: -35px;
+            font-size: 0.7rem;
+            background: #000;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .badge-icon:hover::after {
+            opacity: 1;
+        }
+
+        /* --- ROW: ANALYTICS & SMART TIPS --- */
+        .analytics-row {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .analytics-row {
+                grid-template-columns: 1.5fr 1fr;
+            }
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 260px;
+            position: relative;
+        }
+
+        .tip-box {
+            background: rgba(255,255,255,0.02);
+            padding: 1.2rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            height: 100%;
+        }
+
+        /* --- SECTION: ENVIRONMENTAL IMPACT OPTIONS & ECO-SIDE EFFECTS --- */
+        .info-section {
+            max-width: 1400px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .info-section h2 {
+            font-size: 1.8rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            border: none;
+            padding: 0;
+        }
+
+        .section-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid-4-cases {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .grid-4-cases { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .grid-4-cases { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .info-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .info-content {
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+        }
+
+        .info-content h3 {
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-content p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+
+        .side-effect-link {
+            font-size: 0.85rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: opacity 0.2s;
+        }
+
+        .side-effect-link:hover {
+            text-decoration: underline;
+            opacity: 0.8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="logo">🌿 ECOSPHERE PRO</a>
+        <ul class="nav-links">
+            <li><a href="#metrics">Tracker Dashboard</a></li>
+            <li><a href="#side-effects-section">Case Side Effects</a></li>
+        </ul>
+    </nav>
+
+    <div class="dashboard-grid" id="metrics">
+        <div class="card">
+            <h2>Scenario Case Studio & Inputs</h2>
+            
+            <div class="case-selector-grid">
+                <button class="case-btn active" onclick="loadPreset('global')">Global Avg</button>
+                <button class="case-btn" onclick="loadPreset('warrior')">Eco Warrior</button>
+                <button class="case-btn" onclick="loadPreset('commuter')">Suburban</button>
+                <button class="case-btn" onclick="loadPreset('high')">High Impact</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="country">Regional Evaluation Context</label>
+                <div class="input-desc">Calibrates parameters against domestic baseline averages.</div>
+                <select id="country" class="select-custom" onchange="calculateMetrics()">
+                    <option value="US">United States Baseline (Avg: ~16.0 Tons)</option>
+                    <option value="EU">European Union Baseline (Avg: ~6.5 Tons)</option>
+                    <option value="GL" selected>Global Mean Baseline (Avg: ~4.7 Tons)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="energy">Home Utility Grid Consumption</label>
+                <input type="range" id="energy" min="0" max="600" value="180" oninput="calculateMetrics()">
+                <div class="range-flex">
+                    <span class="input-desc">Monthly kilowatt hour throughput footprint</span>
+                    <span class="range-value" id="energy-val">180 kWh</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="transport">Weekly Vehicle Operation</label>
+                <input type="range" id="transport" min="0" max="500" value="90" oninput="calculateMetrics()">
+                <div class="range-flex">
+                    <span class="input-desc">Cumulative runtime distance logged weekly</span>
+                    <span class="range-value" id="transport-val">90 miles</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="vehicle-type">Powertrain Infrastructure</label>
+                <select id="vehicle-type" class="select-custom" onchange="calculateMetrics()">
+                    <option value="electric">Electric Vehicle Architecture</option>
+                    <option value="hybrid">Hybrid Engine Build</option>
+                    <option value="gas-average" selected>Standard Combustion Car</option>
+                    <option value="gas-large">Large Displacement SUV / Freight</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="diet">Dietary Model</label>
+                <select id="diet" class="select-custom" onchange="calculateMetrics()">
+                    <option value="vegan">Plant-Based Model (Vegan)</option>
+                    <option value="vegetarian">Ovo-Lacto Vegetarian</option>
+                    <option value="low-meat">Omnivore / Reduced Red Meat</option>
+                    <option value="heavy-meat" selected>High Density Animal Protein</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="card visualizer-pane">
+            <h2>Real-time Biosphere Equilibrium</h2>
+            
+            <div class="sphere-container">
+                <div class="ecosphere" id="sphere"></div>
+            </div>
+
+            <div>
+                <div class="score-num" id="score-total">0.0</div>
+                <div class="score-unit">CO₂ Equivalent Metric Tons / Year</div>
+                <div id="status-badge" class="status-badge">Calculating</div>
+            </div>
+
+            <div class="badges-container">
+                <div class="badge-icon" id="badge-clean-grid" data-tip="Clean Grid: Energy < 120 kWh">⚡</div>
+                <div class="badge-icon" id="badge-eco-transit" data-tip="Eco-Transit: Low transit impact">🚲</div>
+                <div class="badge-icon" id="badge-botanist" data-tip="Botanist: Zero meat consumption">🌱</div>
+            </div>
+
+            <button class="action-btn" id="save-log-btn">Commit Current Metrics to History</button>
+        </div>
+    </div>
+
+    <div class="analytics-row">
+        <div class="card">
+            <h2>Historical Progression Log</h2>
+            <div class="chart-container">
+                <canvas id="historicalChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Targeted Optimization Guidance</h2>
+            <div class="tip-box" id="recommendation-tip">
+                Analyzing ecosystem behaviors... adjust metrics to run system processing diagnostics.
+            </div>
+        </div>
+    </div>
+
+    <section class="info-section" id="side-effects-section">
+        <h2>Ecosystem Cases & Side Effects Archive</h2>
+        <p class="section-subtitle">Select a scenario preset above or review the critical ecological side effects corresponding to each operational mode profile.</p>
+        
+        <div class="grid-4-cases">
+            <div class="info-card">
+                <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=400&q=80" alt="Recycling plastic waste concept" class="info-img">
+                <div class="info-content">
+                    <h3>1. Global Baseline Case</h3>
+                    <p>Represents structural global mean resource use. The primary side effect is steady climate change load that outpaces natural ecosystem processing limits.</p>
+                    <a href="https://www.ipcc.ch/" target="_blank" class="side-effect-link">Explore IPCC Science ↗</a>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80" alt="Prristine forests and mountains" class="info-img">
+                <div class="info-content">
+                    <h3>2. Eco Warrior Case</h3>
+                    <p>Minimum impact configuration. Positive side effects include conservation of native topsoil biology, zero smog contribution, and support for forest carbon sinks.</p>
+                    <a href="https://www.unep.org/" target="_blank" class="side-effect-link">View Ecosystem Metrics ↗</a>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <img src="https://images.unsplash.com/photo-1498084393753-b411b2d26b34?auto=format&fit=crop&w=400&q=80" alt="Smog and vehicle heavy traffic congestion" class="info-img">
+                <div class="info-content">
+                    <h3>3. Suburban Commuter</h3>
+                    <p>Heavy dependency on fossil-fueled vehicles. Directly drives regional air quality depletion, high microparticle suspension, and thermal heat trap phenomena.</p>
+                    <a href="https://www.epa.gov/transportation-air-pollution" target="_blank" class="side-effect-link">Air & Transit Data ↗</a>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <img src="https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?auto=format&fit=crop&w=400&q=80" alt="Industrial coal smoke stack output pollution" class="info-img">
+                <div class="info-content">
+                    <h3>4. High Emission Case</h3>
+                    <p>Extreme asset load profile. Triggers immediate ecological side effects: severe ocean acidification from hyper-carbon absorption, biodiversity collapse, and weather instability.</p>
+                    <a href="https://climate.nasa.gov/effects/" target="_blank" class="side-effect-link">NASA Climate Effects ↗</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 Ecosphere Intelligence Systems Engine. Verified Climate API Framework.</p>
+    </footer>
+
+    <script>
+        // DOM Element Caches
+        const energyInput = document.getElementById('energy');
+        const transportInput = document.getElementById('transport');
+        const vehicleSelect = document.getElementById('vehicle-type');
+        const dietSelect = document.getElementById('diet');
+        const countrySelect = document.getElementById('country');
+        
+        const energyVal = document.getElementById('energy-val');
+        const transportVal = document.getElementById('transport-val');
+        const sphere = document.getElementById('sphere');
+        const scoreTotal = document.getElementById('score-total');
+        const statusBadge = document.getElementById('status-badge');
+        const tipBox = document.getElementById('recommendation-tip');
+        const saveBtn = document.getElementById('save-log-btn');
+
+        let historicalChart;
+        let footprintHistory = JSON.parse(localStorage.getItem('ecosphere_history')) || [8.4, 7.9, 7.2, 6.8, 6.5];
+
+        // Scenario Presets Database
+        const presets = {
+            global: { energy: 180, transport: 90, vehicle: 'gas-average', diet: 'heavy-meat', country: 'GL' },
+            warrior: { energy: 60, transport: 10, vehicle: 'electric', diet: 'vegan', country: 'EU' },
+            commuter: { energy: 250, transport: 240, vehicle: 'gas-average', diet: 'low-meat', country: 'US' },
+            high: { energy: 550, transport: 420, vehicle: 'gas-large', diet: 'heavy-meat', country: 'US' }
+        };
+
+        function loadPreset(key) {
+            // Update button visual states
+            const buttons = document.querySelectorAll('.case-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const data = presets[key];
+            energyInput.value = data.energy;
+            transportInput.value = data.transport;
+            vehicleSelect.value = data.vehicle;
+            dietSelect.value = data.diet;
+            countrySelect.value = data.country;
+
+            calculateMetrics();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('historicalChart').getContext('2d');
+            historicalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: footprintHistory.map((_, index) => `Log Layer ${index + 1}`),
+                    datasets: [{
+                        label: 'Annual Emission Run Rate Trends',
+                        data: footprintHistory,
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+        }
+
+        function createParticles() {
+            sphere.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.classList.add('particle');
+                const size = Math.random() * 5 + 2;
+                p.style.width = `${size}px`;
+                p.style.height = `${size}px`;
+                p.style.left = `${Math.random() * 100}%`;
+                p.style.animationDuration = `${Math.random() * 3 + 3}s`;
+                p.style.animationDelay = `${Math.random() * 4}s`;
+                sphere.appendChild(p);
+            }
+        }
+
+        function calculateMetrics() {
+            const energyKwh = parseFloat(energyInput.value);
+            const transportMiles = parseFloat(transportInput.value);
+            const vehicle = vehicleSelect.value;
+            const diet = dietSelect.value;
+            const country = countrySelect.value;
+
+            energyVal.innerText = `${energyKwh} kWh`;
+            transportVal.innerText = `${transportMiles} miles`;
+
+            let energyScore = (energyKwh * 12 * 0.92) / 2204.62;
+            
+            let vMult = 0.42;
+            if (vehicle === 'electric') vMult = 0.08;
+            if (vehicle === 'hybrid') vMult = 0.20;
+            if (vehicle === 'gas-large') vMult = 0.65;
+            let transportScore = (transportMiles * 52 * vMult) / 2204.62;
+
+            let dietScore = 2.9;
+            if (diet === 'vegan') dietScore = 1.0;
+            if (diet === 'vegetarian') dietScore = 1.6;
+            if (diet === 'low-meat') dietScore = 2.1;
+
+            const grandTotal = energyScore + transportScore + dietScore;
+            
+            animateDisplayValue(grandTotal);
+            processGamificationBadges(energyKwh, transportScore, diet);
+            updateVisualSystem(grandTotal, country, energyScore, transportScore, dietScore);
+        }
+
+        function animateDisplayValue(target) {
+            let current = parseFloat(scoreTotal.innerText) || 0;
+            const steps = 15;
+            const inc = (target - current) / steps;
+            let count = 0;
+
+            const timer = setInterval(() => {
+                current += inc;
+                scoreTotal.innerText = current.toFixed(1);
+                if (++count >= steps) {
+                    clearInterval(timer);
+                    scoreTotal.innerText = target.toFixed(1);
+                }
+            }, 20);
+        }
+
+        function processGamificationBadges(energy, transScore, diet) {
+            document.getElementById('badge-clean-grid').classList.toggle('unlocked', energy < 120);
+            document.getElementById('badge-eco-transit').classList.toggle('unlocked', transScore < 1.2);
+            document.getElementById('badge-botanist').classList.toggle('unlocked', diet === 'vegan' || diet === 'vegetarian');
+        }
+
+        function updateVisualSystem(total, country, eScore, tScore, dScore) {
+            let baseline = 4.7; 
+            if (country === 'US') baseline = 16.0;
+            if (country === 'EU') baseline = 6.5;
+
+            let status = 'Ecosystem Stable';
+            let color = 'var(--healthy-eco)';
+            let glow = 'rgba(34, 197, 94, 0.3)';
+
+            if (total > baseline * 1.2) {
+                status = 'Critical Distress';
+                color = 'var(--danger-eco)';
+                glow = 'rgba(239, 68, 68, 0.3)';
+            } else if (total > baseline * 0.8) {
+                status = 'Modulated Risk';
+                color = 'var(--warning-eco)';
+                glow = 'rgba(234, 179, 8, 0.3)';
+            }
+
+            statusBadge.innerText = status;
+            statusBadge.style.backgroundColor = color === 'var(--healthy-eco)' ? 'rgba(34,197,94,0.1)' : color === 'var(--warning-eco)' ? 'rgba(234,179,8,0.1)' : 'rgba(239,68,68,0.1)';
+            statusBadge.style.color = color;
+            statusBadge.style.border = `1px solid ${color}`;
+
+            sphere.style.borderColor = color;
+            sphere.style.boxShadow = `0 0 45px ${glow}, inset 0 0 20px ${glow}`;
+
+            document.querySelectorAll('.particle').forEach(p => {
+                p.style.background = color;
+                p.style.animationDuration = total > baseline * 1.2 ? '1.2s' : '4s';
+            });
+
+            const impacts = [{id:'Energy Grid Management', val:eScore}, {id:'Transit Architecture Emissions', val:tScore}, {id:'Diet Model Choices', val:dScore}];
+            impacts.sort((a,b) => b.val - a.val);
+            
+            if (total < baseline * 0.6) {
+                tipBox.innerHTML = `<strong>✨ Perfect Balance Optimized</strong><br>Your setup runs significantly clear of your current regional standard vector. Keep current operating states intact.`;
+            } else {
+                tipBox.innerHTML = `<strong>⚠️ Primary Contributor: ${impacts[0].id}</strong><br>Your highest operational degradation vector stems from your ${impacts[0].id}. Focus optimizations here to accelerate environmental system stabilization.`;
+            }
+        }
+
+        // Commit Log Interface Event Link
+        saveBtn.addEventListener('click', () => {
+            const currentVal = parseFloat(scoreTotal.innerText);
+            footprintHistory.push(currentVal);
+            if(footprintHistory.length > 8) footprintHistory.shift(); 
+            
+            localStorage.setItem('ecosphere_history', JSON.stringify(footprintHistory));
+            
+            historicalChart.data.labels = footprintHistory.map((_, idx) => `Log Layer ${idx + 1}`);
+            historicalChart.data.datasets[0].data = footprintHistory;
+            historicalChart.update();
+        });
+
+        // Initialize App Hooks
+        createParticles();
+        initChart();
+        calculateMetrics();
+    </script>
+</body>
+</html>
